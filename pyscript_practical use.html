@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pythonで作る小さなアプリ集</title>
+<link rel="stylesheet" href="https://pyscript.net/releases/2026.7.3/core.css">
+<script type="module" src="https://pyscript.net/releases/2026.7.3/core.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f2f5fa;color:#22334c;font:16px/1.8 sans-serif}main{max-width:920px;margin:auto;padding:32px 20px}header{padding:20px 0}h1{font-size:clamp(24px,4vw,34px);margin:8px 0}h2{font-size:23px;margin:8px 0}.tag{color:#2261b0;font-size:13px;font-weight:bold;letter-spacing:.08em}section{background:white;border:1px solid #dbe3ef;border-radius:16px;padding:26px;margin:22px 0}label{display:block;font-weight:bold;margin-top:12px}input,select{display:block;width:100%;padding:11px;border:1px solid #9caec5;border-radius:7px;background:white;font-size:16px;margin:6px 0 14px}button{padding:11px 22px;color:white;background:#225dc1;border:0;border-radius:8px;font-size:16px;cursor:pointer;margin:6px 6px 6px 0}button:disabled{background:#8c99ab;cursor:wait}button.secondary{background:#53627a}.result{background:#eef5ff;border-left:4px solid #3775cc;padding:16px;margin:18px 0;min-height:64px;white-space:pre-wrap;overflow-wrap:anywhere}.hint{font-size:14px;color:#52627b}summary{cursor:pointer;font-weight:bold}nav a{display:inline-block;margin-right:16px;color:#225dc1}#status{background:#e4edf9;border-radius:8px;padding:12px}footer{font-size:14px;color:#53627a}.row{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:500px){.row{grid-template-columns:1fr}section{padding:18px}}
+</style>
+</head>
+<body>
+<main>
+<header><div class="tag">PYTHON × HTML / BEGINNER SAMPLES</div><h1>Pythonで作る小さなアプリ集</h1><p>入力 → Pythonで処理 → 結果を表示。同じ仕組みから3つのアプリを作れます。</p><p id="status" role="status">Pythonを準備しています。初回は時間がかかります。インターネット接続を確認してお待ちください。</p><nav aria-label="サンプル一覧"><a href="#fortune">01 おみくじ</a><a href="#shopping">02 買い物計算</a><a href="#quiz">03 三択クイズ</a></nav></header>
+<section id="fortune"><div class="tag">LEVEL 1 / リスト・乱数・文字列</div><h2>01 名前入りおみくじ</h2><p>名前を入力すると、運勢とひと言メッセージを表示します。</p><label for="name">名前</label><input id="name" placeholder="例：田中" maxlength="40"><button id="fortune-button" disabled>運勢を占う</button><div id="fortune-result" class="result" aria-live="polite">ここに今日の運勢を表示します。</div><details><summary>書き換えて練習</summary><p>①運勢を増やす　②メッセージを書き換える　③ラッキーカラーも表示する。</p></details></section>
+<section id="shopping"><div class="tag">LEVEL 2 / 数値変換・計算・条件分岐</div><h2>02 買い物のお会計</h2><p>税抜単価・個数・消費税率から、支払う合計金額を計算します。</p><div class="row"><div><label for="price">税抜単価（円）</label><input id="price" type="number" min="0" max="1000000" step="1" value="150"></div><div><label for="count">個数</label><input id="count" type="number" min="1" max="10000" step="1" value="3"></div></div><label for="tax-rate">消費税率</label><select id="tax-rate"><option value="10">10％</option><option value="8">8％</option></select><button id="shopping-button" disabled>合計を計算する</button><div id="shopping-result" class="result" aria-live="polite">ここにお会計を表示します。</div><p class="hint">練習用として、税抜合計に対する消費税の1円未満を切り捨てます。</p><details><summary>書き換えて練習</summary><p>①合計が3,000円以上ならメッセージを表示　②送料を加算　③支払金額を入力してお釣りを計算。</p></details></section>
+<section id="quiz"><div class="tag">LEVEL 3 / 関数・リスト・辞書・状態管理</div><h2>03 Python三択クイズ</h2><p id="question">準備中です。</p><div id="choices"><button id="choice-0" disabled>選択肢1</button><button id="choice-1" disabled>選択肢2</button><button id="choice-2" disabled>選択肢3</button></div><div id="quiz-result" class="result" aria-live="polite">答えを選んでください。</div><button id="next-button" disabled>次の問題へ</button><button id="restart-button" class="secondary" disabled>最初から</button><details><summary>書き換えて練習</summary><p>①問題文と選択肢を変更　②問題を追加　③全問正解した場合に特別なメッセージを表示。</p><p>Pythonのanswerは正解の位置です。最初が0、次が1、最後が2です。</p></details></section>
+<footer><p>編集方法：エディターでこのHTMLを開き、下部のPythonを書き換えて保存 → ブラウザーを再読み込み。</p><p>配布ファイルはこのHTMLのみです。PyScript本体は外部から読み込むため、インターネット接続が必要です。再読み込みするとクイズの進行や結果はリセットされます。</p></footer>
+</main>
+<script type="py">
+# 共通：画面の要素を操作する機能と、乱数の機能を読み込みます。
+from pyscript import document, when
+import random
+
+
+# ===== 01 おみくじ =====
+@when("click", "#fortune-button")
+def draw_fortune(event):
+    name = document.querySelector("#name").value.strip()
+    output = document.querySelector("#fortune-result")
+    if name == "":
+        output.textContent = "名前を入力してください。"
+        return
+
+    # 運勢とメッセージをセットで用意します。
+    fortunes = [
+        ["大吉", "新しいことに挑戦してみましょう！"],
+        ["中吉", "友達と話すと良いアイデアが浮かぶかも。"],
+        ["小吉", "小さな積み重ねが力になる一日です。"],
+        ["吉", "落ち着いて進めれば大丈夫。"],
+        ["末吉", "今日は復習を大切にしましょう。"]
+    ]
+    result = random.choice(fortunes)
+    output.textContent = f"{name}さんの運勢は【{result[0]}】です。\n{result[1]}"
+
+
+# ===== 02 買い物計算 =====
+@when("click", "#shopping-button")
+def calculate_shopping(event):
+    output = document.querySelector("#shopping-result")
+    # 入力欄の値は文字列なので、整数に変換します。
+    try:
+        price = int(document.querySelector("#price").value)
+        count = int(document.querySelector("#count").value)
+        rate = int(document.querySelector("#tax-rate").value)
+    except ValueError:
+        output.textContent = "単価と個数を整数で入力してください。"
+        return
+
+    if not (0 <= price <= 1000000 and 1 <= count <= 10000):
+        output.textContent = "単価は0〜1,000,000円、個数は1〜10,000個で入力してください。"
+        return
+
+    subtotal = price * count
+    tax = subtotal * rate // 100
+    total = subtotal + tax
+    output.textContent = (
+        f"税抜合計：{subtotal:,}円\n"
+        f"消費税（{rate}％）：{tax:,}円\n"
+        f"お支払い合計：{total:,}円"
+    )
+
+
+# ===== 03 三択クイズ =====
+# 各問題を辞書にし、それらをリストにまとめます。
+questions = [
+    {"text": "文字を表示するために使うものは？",
+     "choices": ["print()", "input()", "int()"],
+     "answer": 0, "explanation": "print()は文字や数値を出力します。"},
+    {"text": "Pythonで「等しい」を比較する記号は？",
+     "choices": ["=", "==", "!="],
+     "answer": 1, "explanation": "==は等しいかを比較します。=は代入、!=は等しくないかの比較です。"},
+    {"text": "リストの最初の要素を取り出す添字は？",
+     "choices": ["1", "-2", "0"],
+     "answer": 2, "explanation": "リストの添字は0から始まります。"}
+]
+question_index = 0
+score = 0
+answered = False
+
+
+def show_question():
+    global answered
+    answered = False
+    question = questions[question_index]
+    document.querySelector("#question").textContent = (
+        f"第{question_index + 1}問 / 全{len(questions)}問：{question['text']}"
+    )
+    for index in range(3):
+        button = document.querySelector(f"#choice-{index}")
+        button.textContent = question["choices"][index]
+        button.disabled = False
+    document.querySelector("#quiz-result").textContent = "答えを選んでください。"
+    document.querySelector("#next-button").disabled = True
+    document.querySelector("#next-button").textContent = (
+        "結果を見る" if question_index == len(questions) - 1 else "次の問題へ"
+    )
+
+
+def check_answer(selected):
+    global score, answered
+    if answered:
+        return
+    answered = True
+    question = questions[question_index]
+    if selected == question["answer"]:
+        score += 1
+        message = "正解です！"
+    else:
+        correct = question["choices"][question["answer"]]
+        message = f"不正解です。正解は「{correct}」です。"
+    document.querySelector("#quiz-result").textContent = (
+        message + "\n" + question["explanation"]
+    )
+    for index in range(3):
+        document.querySelector(f"#choice-{index}").disabled = True
+    document.querySelector("#next-button").disabled = False
+
+
+@when("click", "#choice-0")
+def answer_zero(event):
+    check_answer(0)
+
+
+@when("click", "#choice-1")
+def answer_one(event):
+    check_answer(1)
+
+
+@when("click", "#choice-2")
+def answer_two(event):
+    check_answer(2)
+
+
+@when("click", "#next-button")
+def next_question(event):
+    global question_index
+    if not answered:
+        return
+    question_index += 1
+    if question_index < len(questions):
+        show_question()
+    else:
+        document.querySelector("#question").textContent = "クイズ終了！"
+        document.querySelector("#quiz-result").textContent = (
+            f"全{len(questions)}問中、{score}問正解でした。\n「最初から」で再挑戦できます。"
+        )
+        document.querySelector("#next-button").disabled = True
+
+
+@when("click", "#restart-button")
+def restart_quiz(event):
+    global question_index, score
+    question_index = 0
+    score = 0
+    show_question()
+
+
+# 起動時：準備が完了してから操作できるようにします。
+show_question()
+for selector in ["#fortune-button", "#shopping-button", "#restart-button"]:
+    document.querySelector(selector).disabled = False
+document.querySelector("#status").textContent = "準備できました。3つのアプリを試してみましょう。"
+</script>
+</body>
+</html>
